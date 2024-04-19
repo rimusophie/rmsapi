@@ -1,7 +1,7 @@
 from fastapi import FastAPI
-from api.routers import blogs, blog_categories
+from api.routers import blog, blog_category
 
 app = FastAPI()
 
-app.include_router(blogs.router)
-app.include_router(blog_categories.router)
+app.include_router(blog.router)
+app.include_router(blog_category.router)
