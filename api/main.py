@@ -1,7 +1,7 @@
 from fastapi import FastAPI
+from api.routers import blogs, blog_categories
 
 app = FastAPI()
 
-@app.get("/hello")
-async def hello():
-    return {"message": "hello world!"}
+app.include_router(blogs.router)
+app.include_router(blog_categories.router)
