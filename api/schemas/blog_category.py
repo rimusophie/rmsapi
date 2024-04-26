@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 
 # 共通
 class BlogCategoryBase(BaseModel):
-    name: str = Field("", example="日常")
+    name: str = Field("", max_length = 2, example = "日常")
 
 # 更新時
 class BlogCategoryCreate(BlogCategoryBase):

@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String
 from sqlalchemy.dialects.mysql import TIMESTAMP as Timestamp
 from sqlalchemy.sql.expression import text
 from api.db import Base
+from api.models.blog import Blog
 
 class BlogCategory(Base):
     __tablename__ = "blog_categories"
