@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-import api.cruds.blog_categories as crud
+import api.cruds.blog_category as crud
 import api.schemas.blog_category as schema
 from api.db import get_db
 
@@ -35,7 +35,7 @@ async def update_blog_category(id: int, body: schema.BlogCategoryCreate, db: Ses
     if blog_category is None:
         raise HTTPException(status_code = 404, detail = "BlogCategory not found")
     
-    return crud.update_blog_category(db, body, original=blog_category)
+    return crud.update_blog_category(db, body, data=blog_category)
 
 # 削除
 @router.delete("/blog_categories/{id}", response_model = None)
@@ -45,4 +45,4 @@ async def delete_blog_category(id: int, db: Session = Depends(get_db)):
     if blog_category is None:
         raise HTTPException(status_code = 404, detail = "BlogCategory not found")
 
-    return crud.delete_blog_category(db, original=blog_category)
+    return crud.delete_blog_category(db, data=blog_category)
