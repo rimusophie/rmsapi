@@ -1,23 +1,24 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 from sqlalchemy.engine import Result
-from datetime import date
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from datetime import date
 import api.models.blog as model
 import api.models.blog_category as model_blog_category
 import api.schemas.blog as schema
 
 # 登録
-def create_blog(db: Session, data: schema.BlogCreate) -> model.Blog:
+async def create_blog(db: AsyncSession, data: schema.BlogCreate) -> model.Blog:
     ret = model.Blog(**data.dict())
     db.add(ret)
-    db.commit()
-    db.refresh(ret)
+    await db.commit()
+    await db.refresh(ret)
     return ret
 
 # 一覧取得
-def get_blogs(db: Session) -> list[tuple[int, str, int, str, date]]:
-    ret: Result = db.execute(
+async def get_blogs(db: AsyncSession) -> list[tuple[int, str, int, str, date]]:
+    ret: Result = await db.execute(
         select(
             model.Blog.id,
             model.Blog.title,
@@ -30,8 +31,8 @@ def get_blogs(db: Session) -> list[tuple[int, str, int, str, date]]:
     return ret.all()
 
 # 詳細取得
-def get_blog(db: Session, id: int) -> model.Blog | None:
-    ret: Result = db.execute(
+async def get_blog(db: AsyncSession, id: int) -> model.Blog | None:
+    ret: Result = await db.execute(
         select(
             model.Blog
         ).outerjoin(
@@ -41,17 +42,17 @@ def get_blog(db: Session, id: int) -> model.Blog | None:
     return ret.scalars().first()
 
 # 更新
-def update_blog(db: Session, new_data: schema.Blog, data: model.Blog) -> model.Blog:
+async def update_blog(db: AsyncSession, new_data: schema.Blog, data: model.Blog) -> model.Blog:
     data.title = new_data.title
     data.blog_category_id = new_data.blog_category_id
     data.filename = new_data.filename
     data.updated_date = new_data.updated_date
     db.add(data)
-    db.commit()
-    db.refresh(data)
+    await db.commit()
+    await db.refresh(data)
     return data
 
 # 削除
-def delete_blog(db: Session, data: model.Blog) -> None:
-    db.delete(data)
-    db.commit()
+async def delete_blog(db: AsyncSession, data: model.Blog) -> None:
+    await db.delete(data)
+    await db.commit()
