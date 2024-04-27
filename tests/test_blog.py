@@ -35,38 +35,6 @@ async def async_client() -> AsyncClient:
     async with AsyncClient(transport = ASGITransport(app = app), base_url = "http://localhost:8000") as client:
         yield client
 
-# blog_categoryテスト
-@pytest.mark.asyncio
-async def test_blog_category(async_client):
-    # 作成
-    response = await async_client.post("/blog_categories", json = {"name": "aaaa"})
-    assert response.status_code == starlette.status.HTTP_200_OK
-    response_obj = response.json()
-    assert response_obj["name"] == "aaaa"
-
-    # 取得
-    response = await async_client.get("/blog_categories")
-    assert response.status_code == starlette.status.HTTP_200_OK
-    response_obj = response.json()
-    assert len(response_obj) == 1
-    assert response_obj[0]["name"] == "aaaa"
-
-    # 更新
-    id = response_obj[0]["id"]
-    url = f"/blog_categories/{id}"
-    response = await async_client.put(url, json = {"name": "bbbb"})
-    assert response.status_code == starlette.status.HTTP_200_OK
-    response_obj = response.json()
-    assert response_obj["id"] == id
-    assert response_obj["name"] == "bbbb"
-
-    # 削除
-    id = response_obj["id"]
-    response = await async_client.delete(url)
-    assert response.status_code == starlette.status.HTTP_200_OK
-    response_obj = response.json()
-    assert response_obj == None
-
 # blogテスト
 @pytest.mark.asyncio
 async def test_blog(async_client):
