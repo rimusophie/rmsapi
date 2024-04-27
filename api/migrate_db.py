@@ -3,7 +3,7 @@ from sqlalchemy import create_engine
 from api.models.blog import Base as blog_base
 from api.models.blog_category import Base as blog_category_base
 
-DB_URL = "mysql+pymysql://root:root@db:3306/rms?charset=utf8"
+DB_URL = "mysql+pymysql://root:root@db:3306/rms_test?charset=utf8"
 engine = create_engine(DB_URL, echo = True)
 
 def reset_database():

@@ -8,7 +8,8 @@ import api.schemas.blog_category as schema
 
 # 登録
 async def create_blog_category(db: AsyncSession, data: schema.BlogCategoryCreate) -> model.BlogCategory:
-    ret = model.BlogCategory(**data.dict())
+    #ret = model.BlogCategory(**data.dict())
+    ret = model.BlogCategory(name = data.name)
     db.add(ret)
     await db.commit()
     await db.refresh(ret)

@@ -1,0 +1,8 @@
+マイグレーション
+docker compose exec app poetry run python -m api.migrate_db
+
+テスト実行
+docker compose run --entrypoint "poetry run pytest" app
+
+テスト実行(特定の関数のみ)
+docker compose run --entrypoint "poetry run pytest -k xxxx" app
