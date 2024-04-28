@@ -16,14 +16,10 @@ class BlogCreate(BlogBase):
 class BlogCreateResponse(BlogCreate):
     id: int
 
-    """ class Config:
-        orm_mode = True """
     model_config = ConfigDict(from_attributes = True)
 
 # 取得
 class Blog(BlogBase):
     id: int
 
-    """ class Config:
-        orm_mode = True """
     model_config = ConfigDict(from_attributes = True)

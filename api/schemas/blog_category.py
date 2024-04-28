@@ -12,14 +12,10 @@ class BlogCategoryCreate(BlogCategoryBase):
 class BlogCategoryCreateResponse(BlogCategoryCreate):
     id: int
 
-    """ class Config:
-        orm_mode = True """
     model_config = ConfigDict(from_attributes = True)
 
 # 取得
 class BlogCategory(BlogCategoryBase):
     id: int
 
-    """ class Config:
-        orm_mode = True """
     model_config = ConfigDict(from_attributes = True)

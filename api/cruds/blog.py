@@ -1,4 +1,3 @@
-from sqlalchemy.orm import Session
 from sqlalchemy import select
 from sqlalchemy.engine import Result
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,7 +9,6 @@ import api.schemas.blog as schema
 
 # 登録
 async def create_blog(db: AsyncSession, data: schema.BlogCreate) -> model.Blog:
-    #ret = model.Blog(**data.dict())
     ret = model.Blog(
         title = data.title, 
         blog_category_id = data.blog_category_id, 
