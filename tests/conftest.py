@@ -3,10 +3,11 @@ from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import text
+from sqlalchemy import create_engine
 
-from api.db import get_db, Base
+from api.db import get_db, get_engine, Base
 from api.main import app
-from tests.env import ASYNC_DB_URL
+from tests.env import ASYNC_DB_URL, DB_URL
 
 @pytest_asyncio.fixture(autouse = True, scope = "session")
 async def init_test():
@@ -17,6 +18,8 @@ async def init_test():
     async with async_engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
+
+    await async_engine.dispose()
 
 @pytest_asyncio.fixture
 async def async_client() -> AsyncClient:
@@ -51,3 +54,20 @@ async def async_client() -> AsyncClient:
 
     # event_loopエラーが出るため明示的に後始末をする
     await async_engine.dispose()
+
+@pytest_asyncio.fixture
+async def async_client_engine() -> AsyncClient:
+    def get_test_engine():
+        conn = create_engine(DB_URL, echo = True)
+        try:
+            yield conn
+        finally:
+            conn.dispose()
+
+    app.dependency_overrides[get_engine] = get_test_engine
+
+    # テスト用に非同期HTTPクライアントを返却
+    async with AsyncClient(transport = ASGITransport(app = app), base_url = "http://localhost:8000") as client:
+        yield client
+
+    app.dependency_overrides.clear()
