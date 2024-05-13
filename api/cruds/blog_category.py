@@ -1,6 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.engine import Result
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.sql.expression import func
 
 import api.models.blog_category as model
 import api.schemas.blog_category as schema
@@ -14,12 +15,14 @@ async def create_blog_category(db: AsyncSession, data: schema.BlogCategoryCreate
     return ret
 
 # 一覧取得
-async def get_blog_categories(db: AsyncSession) -> list[tuple[int, str]]:
+async def get_blog_categories(db: AsyncSession, page: int, limit: int) -> list[tuple[int, str]]:
     ret: Result = await db.execute(
         select(
             model.BlogCategory.id,
             model.BlogCategory.name
         )
+        .order_by(model.BlogCategory.id)
+        .limit(limit).offset((page - 1) * limit)
     )
     return ret.all()
 
@@ -42,3 +45,11 @@ async def update_blog_category(db: AsyncSession, new_data: schema.BlogCategory, 
 async def delete_blog_category(db: AsyncSession, data: model.BlogCategory) -> None:
     await db.delete(data)
     await db.commit()
+
+# 件数取得
+async def count_blog_category(db: AsyncSession) -> int:
+    ret: Result = await db.execute(
+        func.count(model.BlogCategory.id)
+    )
+    
+    return ret.scalar()

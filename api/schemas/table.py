@@ -1,5 +1,10 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 # 取得
 class Table(BaseModel):
-    name: str = Field("blogs", max_length = 64)
+    name: str
+
+class DBInfo(BaseModel):
+    host: str
+    name: str
+    port: int

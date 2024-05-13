@@ -5,9 +5,9 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import text
 from sqlalchemy import create_engine
 
-from api.db import get_db, get_engine, Base
+from api.db import get_db, get_engine, get_env_info, Base
 from api.main import app
-from tests.env import ASYNC_DB_URL, DB_URL
+from tests.env import ASYNC_DB_URL, DB_URL, DB_HOST, DB_NAME, DB_PORT
 
 @pytest_asyncio.fixture(autouse = True, scope = "session")
 async def init_test():
@@ -64,7 +64,17 @@ async def async_client_engine() -> AsyncClient:
         finally:
             conn.dispose()
 
+    # データベース情報を取得
+    def get_test_env_info():
+        ret: dict = {
+            "host": DB_HOST,
+            "name": DB_NAME,
+            "port": DB_PORT
+        }
+        return ret
+
     app.dependency_overrides[get_engine] = get_test_engine
+    app.dependency_overrides[get_env_info] = get_test_env_info
 
     # テスト用に非同期HTTPクライアントを返却
     async with AsyncClient(transport = ASGITransport(app = app), base_url = "http://localhost:8000") as client:
