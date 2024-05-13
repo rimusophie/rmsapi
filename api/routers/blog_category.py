@@ -13,6 +13,11 @@ router = APIRouter()
 async def list_blog_categories(db: AsyncSession = Depends(get_db), page: int = Query(default = 1, gt = 0), limit:int = Query(default = 50, gt = 0, le = 50)):
     return await crud.get_blog_categories(db, page = page, limit = limit)
 
+# 一覧取得(idとnameのみ)
+@router.get("/blog_categories_keyvalue", response_model = list[schema_common.KeyValueModel])
+async def list_blog_categories_keyvalue(db: AsyncSession = Depends(get_db)):
+    return await crud.get_blog_categories_keyvalue(db)
+
 # 詳細取得
 @router.get("/blog_categories/{id}", response_model = schema.BlogCategory)
 async def detail_blog_category(id: int, db: AsyncSession = Depends(get_db)):

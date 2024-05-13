@@ -11,6 +11,10 @@ async def get_blog_categories_count(async_client):
 async def get_blog_categories(async_client, url: str):
     return await async_client.get(url)
 
+# blog_categorykeyvalue取得
+async def get_blog_categories_keyvalue(async_client):
+    return await async_client.get("/blog_categories_keyvalue")
+
 # blog_category詳細
 async def get_blog_category(async_client, id: int):
     url = f"{BASE_URL}/{id}"
@@ -179,3 +183,23 @@ async def test_count(async_client):
     assert len(response_obj) == 2
     assert response_obj[0]["name"] == test_name_4
     assert response_obj[1]["name"] == test_name_5
+
+# keyvalueテスト
+@pytest.mark.asyncio
+async def test_keyvalue(async_client):
+    test_name_1 = "ccc"
+    test_name_2 = "bbb"
+    test_name_3 = "aaa"
+
+    # 作成
+    await create_blog_category(async_client, test_name_1)
+    await create_blog_category(async_client, test_name_2)
+    await create_blog_category(async_client, test_name_3)
+
+    response = await get_blog_categories_keyvalue(async_client)
+    assert response.status_code == starlette.status.HTTP_200_OK
+    response_obj = response.json()
+
+    assert response_obj[0]["name"] == test_name_3
+    assert response_obj[1]["name"] == test_name_2
+    assert response_obj[2]["name"] == test_name_1

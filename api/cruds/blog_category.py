@@ -26,6 +26,18 @@ async def get_blog_categories(db: AsyncSession, page: int, limit: int) -> list[t
     )
     return ret.all()
 
+# 一覧取得(idとnameのみ)
+async def get_blog_categories_keyvalue(db: AsyncSession) -> list[tuple[int, str]]:
+    # 名称順にする
+    ret: Result = await db.execute(
+        select(
+            model.BlogCategory.id,
+            model.BlogCategory.name
+        )
+        .order_by(model.BlogCategory.name)
+    )
+    return ret.all()
+
 # 詳細取得
 async def get_blog_category(db: AsyncSession, id: int) -> model.BlogCategory | None:
     ret: Result = await db.execute(
