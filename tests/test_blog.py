@@ -48,247 +48,213 @@ async def delete_blog(async_client, id: int):
     url = f"{BASE_URL}/{id}"
     return await async_client.delete(url)
 
-# CRUDテスト
+test_title_tmp = "tmp"
+test_title_ok = "test_title_ok"
+test_title_ng = ""
+for i in range(201):
+    test_title_ng += "a"
+
+test_filename_tmp = "tmp.html"
+test_filename_ok = "test_filename_ok.html"
+test_filename_ng = ""
+for i in range(251):
+    test_filename_ng += "a"
+
+test_updated_date_ok = "2024-04-01"
+test_updated_date_tmp = "2024-01-01"
+test_updated_date_ng = "2024-02-31"
+
+test_blog_category_name_tmp = "tmp"
+
+# createテスト
 @pytest.mark.asyncio
-async def test_blog(async_client):
-    test_name_1 = "test_name_1"
-    test_name_2 = "test_name_2"
+@pytest.mark.parametrize(
+    "input_title, input_filename, input_updated_date, expect_status, expect_title, expect_filename, expect_updated_date",
+    [
+        (test_title_ok, test_filename_ok, test_updated_date_ok, starlette.status.HTTP_200_OK, test_title_ok, test_filename_ok, test_updated_date_ok),
+        (test_title_ng, test_filename_ok, test_updated_date_ok, starlette.status.HTTP_422_UNPROCESSABLE_ENTITY, test_title_ng, test_filename_ok, test_updated_date_ok),
+        (test_title_ok, test_filename_ng, test_updated_date_ok, starlette.status.HTTP_422_UNPROCESSABLE_ENTITY, test_title_ok, test_filename_ng, test_updated_date_ok),
+        (test_title_ok, test_filename_ok, test_updated_date_ng, starlette.status.HTTP_422_UNPROCESSABLE_ENTITY, test_title_ok, test_filename_ok, test_updated_date_ng),
+    ],
+)
+async def test_create(input_title, input_filename, input_updated_date, expect_status, expect_title, expect_filename, expect_updated_date, async_client):
+    # blog_categoroy作成
+    response = await create_blog_category(async_client, test_blog_category_name_tmp)
+    response_obj = response.json()
+    blog_category_id = response_obj["id"]
 
-    test_title_1 = "test_title_1"
-    test_title_2 = "test_title_2"
-    test_filename_1 = "test_filename_1.html"
-    test_filename_2 = "test_filename_2.html"
-    test_updated_date_1 = "2024-04-01"
-    test_updated_date_2 = "2024-04-02"
+    response = await create_blog(async_client, input_title, blog_category_id, input_filename, input_updated_date)
+    assert response.status_code == expect_status
 
-    # blog_category作成
-    response = await create_blog_category(async_client, test_name_1)
+    if response.status_code == starlette.status.HTTP_200_OK:
+        response_obj = response.json()
+        assert response_obj["id"] != None 
+        assert response_obj["title"] == expect_title
+        assert response_obj["blog_category_id"] == blog_category_id
+        assert response_obj["filename"] == expect_filename
+        assert response_obj["updated_date"] == expect_updated_date
+
+# updateテスト
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "input_title, input_filename, input_updated_date, input_create_id, expect_status, expect_title, expect_filename, expect_updated_date",
+    [
+        (test_title_ok, test_filename_ok, test_updated_date_ok, True, starlette.status.HTTP_200_OK, test_title_ok, test_filename_ok, test_updated_date_ok),
+        (test_title_ng, test_filename_ok, test_updated_date_ok, True, starlette.status.HTTP_422_UNPROCESSABLE_ENTITY, test_title_ng, test_filename_ok, test_updated_date_ok),
+        (test_title_ok, test_filename_ng, test_updated_date_ok, True, starlette.status.HTTP_422_UNPROCESSABLE_ENTITY, test_title_ok, test_filename_ng, test_updated_date_ok),
+        (test_title_ok, test_filename_ok, test_updated_date_ng, True, starlette.status.HTTP_422_UNPROCESSABLE_ENTITY, test_title_ok, test_filename_ok, test_updated_date_ng),
+        (test_title_ok, test_filename_ok, test_updated_date_ok, False, starlette.status.HTTP_404_NOT_FOUND, test_title_ok, test_filename_ok, test_updated_date_ok),
+    ],
+)
+async def test_update(input_title, input_filename, input_updated_date, input_create_id, expect_status, expect_title, expect_filename, expect_updated_date, async_client):
+    # blog_categoroy作成
+    response = await create_blog_category(async_client, test_blog_category_name_tmp)
     response_obj = response.json()
     blog_category_id_1 = response_obj["id"]
 
-    response = await create_blog_category(async_client, test_name_2)
+    # blog_categoroy作成
+    response = await create_blog_category(async_client, test_blog_category_name_tmp)
     response_obj = response.json()
     blog_category_id_2 = response_obj["id"]
 
     # 作成
-    response = await create_blog(async_client, test_title_1, blog_category_id_1, test_filename_1, test_updated_date_1)
-    assert response.status_code == starlette.status.HTTP_200_OK
+    response = await create_blog(async_client, test_title_tmp, blog_category_id_1,  test_filename_tmp, test_updated_date_tmp)
     response_obj = response.json()
-    assert response_obj["title"] == test_title_1
-    assert response_obj["blog_category_id"] == blog_category_id_1
-    assert response_obj["filename"] == test_filename_1
-    assert response_obj["updated_date"] == test_updated_date_1
-
     id = response_obj["id"]
 
-    # 取得
-    response = await get_blogs(async_client, BASE_URL)
-    assert response.status_code == starlette.status.HTTP_200_OK
-    response_obj = response.json()
-    assert len(response_obj) == 1
-    assert response_obj[0]["id"] == id
-    assert response_obj[0]["title"] == test_title_1
-    assert response_obj[0]["blog_category_id"] == blog_category_id_1
-    assert response_obj[0]["filename"] == test_filename_1
-    assert response_obj[0]["updated_date"] == test_updated_date_1
+    if input_create_id == False:
+        id = id + 1
 
-    # 詳細
-    response = await get_blog(async_client, id)
-    assert response.status_code == starlette.status.HTTP_200_OK
-    response_obj = response.json()
-    assert response_obj["id"] == id
-    assert response_obj["title"] == test_title_1
-    assert response_obj["blog_category_id"] == blog_category_id_1
-    assert response_obj["filename"] == test_filename_1
-    assert response_obj["updated_date"] == test_updated_date_1
+    response = await update_blog(async_client, id, input_title, blog_category_id_2, input_filename, input_updated_date)
+    assert response.status_code == expect_status
+    
+    if response.status_code == starlette.status.HTTP_200_OK:
+        response_obj = response.json()
+        assert response_obj["id"] == id
+        assert response_obj["title"] == expect_title
+        assert response_obj["blog_category_id"] == blog_category_id_2
+        assert response_obj["filename"] == expect_filename
+        assert response_obj["updated_date"] == expect_updated_date
 
-    # 更新
-    response = await update_blog(async_client, id, test_title_2, blog_category_id_2, test_filename_2, test_updated_date_2)
-    assert response.status_code == starlette.status.HTTP_200_OK
+# deleteテスト
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "input_create_id, expect_status",
+    [
+        (True, starlette.status.HTTP_200_OK),
+        (False, starlette.status.HTTP_404_NOT_FOUND),
+    ],
+)
+async def test_delete(input_create_id, expect_status, async_client):
+    # blog_categoroy作成
+    response = await create_blog_category(async_client, test_blog_category_name_tmp)
     response_obj = response.json()
-    assert response_obj["title"] == test_title_2
-    assert response_obj["blog_category_id"] == blog_category_id_2
-    assert response_obj["filename"] == test_filename_2
-    assert response_obj["updated_date"] == test_updated_date_2
+    blog_category_id = response_obj["id"]
 
-    # 削除
+    # 作成
+    response = await create_blog(async_client, test_title_tmp, blog_category_id, test_filename_tmp, test_updated_date_tmp)
+    response_obj = response.json()
+    id = response_obj["id"]
+
+    if input_create_id == False:
+        id = id + 1
+
     response = await delete_blog(async_client, id)
-    assert response.status_code == starlette.status.HTTP_200_OK
-    response_obj = response.json()
-    assert response_obj == None
+    assert response.status_code == expect_status
 
-# 入力チェックテスト
+# detailテスト
 @pytest.mark.asyncio
-async def test_input_length(async_client):
-    test_title_ng = (
-        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-        "a"
-    )
-    test_filename_ng = (
-        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-        "a"
-    )
-    test_updated_date_ng = "2024-02-31"
-
-    test_name_ok = "test_name_ok"
-
-    test_title_ok = "test_title_ok"
-    test_filename_ok = "test_filename_ok.html"
-    test_updated_date_ok = "2024-04-01"
-
-    # blog_category作成
-    response = await create_blog_category(async_client, test_name_ok)
+@pytest.mark.parametrize(
+    "input_title, input_filename, input_updated_date, input_create_id, expect_status, expect_title, expect_filename, expect_updated_date",
+    [
+        (test_title_ok, test_filename_ok, test_updated_date_ok, True, starlette.status.HTTP_200_OK, test_title_ok, test_filename_ok, test_updated_date_ok),
+        (test_title_ok, test_filename_ok, test_updated_date_ok, False, starlette.status.HTTP_404_NOT_FOUND, test_title_ok, test_filename_ok, test_updated_date_ok),
+    ],
+)
+async def test_detail(input_title, input_filename, input_updated_date, input_create_id, expect_status, expect_title, expect_filename, expect_updated_date, async_client):
+    # blog_categoroy作成
+    response = await create_blog_category(async_client, test_blog_category_name_tmp)
     response_obj = response.json()
-    blog_category_id_1 = response_obj["id"]
-
-    # 作成(title)
-    response = await create_blog(async_client, test_title_ng, blog_category_id_1, test_filename_ok, test_updated_date_ok)
-    assert response.status_code == starlette.status.HTTP_422_UNPROCESSABLE_ENTITY
-
-    # 作成(filename)
-    response = await create_blog(async_client, test_title_ok, blog_category_id_1, test_filename_ng, test_updated_date_ok)
-    assert response.status_code == starlette.status.HTTP_422_UNPROCESSABLE_ENTITY
-
-    # 作成(updated_date)
-    response = await create_blog(async_client, test_title_ok, blog_category_id_1, test_filename_ok, test_updated_date_ng)
-    assert response.status_code == starlette.status.HTTP_422_UNPROCESSABLE_ENTITY
+    blog_category_id = response_obj["id"]
 
     # 作成
-    response = await create_blog(async_client, test_title_ok, blog_category_id_1, test_filename_ok, test_updated_date_ok)
+    response = await create_blog(async_client, input_title, blog_category_id, input_filename, input_updated_date)
     response_obj = response.json()
-
     id = response_obj["id"]
 
-    # 更新(title)
-    response = await update_blog(async_client, id, test_title_ng, blog_category_id_1, test_filename_ok, test_updated_date_ok)
-    assert response.status_code == starlette.status.HTTP_422_UNPROCESSABLE_ENTITY
+    if input_create_id == False:
+        id = id + 1
 
-    # 更新(filename)
-    response = await update_blog(async_client, id, test_title_ok, blog_category_id_1, test_filename_ng, test_updated_date_ok)
-    assert response.status_code == starlette.status.HTTP_422_UNPROCESSABLE_ENTITY
+    response = await get_blog(async_client, id)
+    assert response.status_code == expect_status
+    
+    if response.status_code == starlette.status.HTTP_200_OK:
+        response_obj = response.json()
+        assert response_obj["id"] == id
+        assert response_obj["title"] == expect_title
+        assert response_obj["blog_category_id"] == blog_category_id
+        assert response_obj["filename"] == expect_filename
+        assert response_obj["updated_date"] == expect_updated_date
 
-    # 更新(updated_date)
-    response = await update_blog(async_client, id, test_title_ok, blog_category_id_1, test_filename_ok, test_updated_date_ng)
-
-    assert response.status_code == starlette.status.HTTP_422_UNPROCESSABLE_ENTITY
-
-# 存在テスト
+# listテスト
 @pytest.mark.asyncio
-async def test_id_exist(async_client):
-    test_name_ok = "test_name_ok"
-
-    test_title_ok = "test_title_ok"
-    test_filename_ok = "test_filename_ok.html"
-    test_updated_date_ok = "2024-04-01"
-
-    # blog_category作成
-    response = await create_blog_category(async_client, test_name_ok)
+@pytest.mark.parametrize(
+    "input_page, input_limit, expect_status, expect_len, expect_index",
+    [
+        (0, 3, starlette.status.HTTP_422_UNPROCESSABLE_ENTITY, 0, -1),  # page異常
+        (1, 3, starlette.status.HTTP_200_OK, 3, 0),   # 1ページ目3件出力(正常)
+        (2, 3, starlette.status.HTTP_200_OK, 2, 3),   # 2ページ目3件出力(2件出力)
+        (3, 3, starlette.status.HTTP_200_OK, 0, -1),            # 3ページ目3件出力(0件出力)
+        (1, 0, starlette.status.HTTP_422_UNPROCESSABLE_ENTITY, 0, -1),  # limit異常
+        (1, 10, starlette.status.HTTP_200_OK, 5, 0),  # 1ページ目10件出力(5件出力)
+        (2, 10, starlette.status.HTTP_200_OK, 0, -1),  # 2ページ目10件出力(0件出力)
+    ],
+)
+async def test_list(input_page, input_limit, expect_status, expect_len, expect_index, async_client):
+    # blog_categoroy作成
+    response = await create_blog_category(async_client, test_blog_category_name_tmp)
     response_obj = response.json()
-    blog_category_id_1 = response_obj["id"]
+    blog_category_id = response_obj["id"]
 
     # 作成
-    response = await create_blog(async_client, test_title_ok, blog_category_id_1, test_filename_ok, test_updated_date_ok)
-    response_obj = response.json()
+    ids = [0] * 5
+    for i in range(len(ids)):
+        response = await create_blog(async_client, test_title_tmp, blog_category_id, test_filename_tmp, test_updated_date_tmp)
+        response_obj = response.json()
+        ids[i] = response_obj["id"]
 
-    id = response_obj["id"]
+    url = f"{BASE_URL}?page={input_page}&limit={input_limit}"
+    response = await get_blogs(async_client, url)
+    assert response.status_code == expect_status
 
-    no_exist_id = id + 1
+    if expect_status == starlette.status.HTTP_200_OK:
+        response_obj = response.json()
+        assert len(response_obj) == expect_len
 
-    # 詳細
-    response = await get_blog(async_client, no_exist_id)
-    assert response.status_code == starlette.status.HTTP_404_NOT_FOUND
+        if len(response_obj) > 0:
+            assert response_obj[0]["id"] == ids[expect_index]
 
-    # 更新
-    response = await update_blog(async_client, no_exist_id, test_title_ok, blog_category_id_1, test_filename_ok, test_updated_date_ok)
-    assert response.status_code == starlette.status.HTTP_404_NOT_FOUND
-
-    # 削除
-    response = await delete_blog(async_client, no_exist_id)
-    assert response.status_code == starlette.status.HTTP_404_NOT_FOUND
-
-# 件数テスト
+# countテスト
 @pytest.mark.asyncio
-async def test_count(async_client):
-    test_name_ok = "test_name_ok"
-
-    test_title_ok = "test_name_ok"
-    test_filename_ok = "test_filename_ok.html"
-    test_updated_date_ok = "2024-04-01"
-
-    # blog_category作成
-    response = await create_blog_category(async_client, test_name_ok)
+@pytest.mark.parametrize(
+    "input_count, expect_status, expect_count",
+    [
+        (0, starlette.status.HTTP_200_OK, 0),
+        (3, starlette.status.HTTP_200_OK, 3),
+    ],
+)
+async def test_count(input_count, expect_status, expect_count, async_client):
+    # blog_categoroy作成
+    response = await create_blog_category(async_client, test_blog_category_name_tmp)
     response_obj = response.json()
-    blog_category_id_1 = response_obj["id"]
+    blog_category_id = response_obj["id"]
+
+    # 作成
+    for i in range(input_count):
+        await create_blog(async_client, test_title_tmp, blog_category_id, test_filename_tmp, test_updated_date_tmp)
 
     # 件数
     response = await get_blogs_count(async_client)
-    assert response.status_code == starlette.status.HTTP_200_OK
+    assert response.status_code == expect_status
     response_obj = response.json()
-    assert response_obj["count"] == 0
-
-    # 作成
-    await create_blog(async_client, test_title_ok, blog_category_id_1, test_filename_ok, test_updated_date_ok)
-
-    # 件数
-    response = await get_blogs_count(async_client)
-    assert response.status_code == starlette.status.HTTP_200_OK
-    response_obj = response.json()
-    assert response_obj["count"] == 1
-
-# ページネーションテスト
-@pytest.mark.asyncio
-async def test_count(async_client):
-    base_url = "/blogs"
-
-    test_name_ok = "test_name_ok"
-
-    test_title_1 = "test_title_1"
-    test_title_2 = "test_title_2"
-    test_title_3 = "test_title_3"
-    test_title_4 = "test_title_4"
-    test_title_5 = "test_title_5"
-    test_filename_ok = "test_filename_ok.html"
-    test_updated_date_ok = "2024-04-01"
-
-    # blog_category作成
-    response = await create_blog_category(async_client, test_name_ok)
-    response_obj = response.json()
-    blog_category_id_1 = response_obj["id"]
-
-    # 0件
-    response = await get_blogs(async_client, BASE_URL)
-    assert response.status_code == starlette.status.HTTP_200_OK
-    response_obj = response.json()
-    assert len(response_obj) == 0
-
-    # 作成
-    await create_blog(async_client, test_title_1, blog_category_id_1, test_filename_ok, test_updated_date_ok)
-    await create_blog(async_client, test_title_2, blog_category_id_1, test_filename_ok, test_updated_date_ok)
-    await create_blog(async_client, test_title_3, blog_category_id_1, test_filename_ok, test_updated_date_ok)
-    await create_blog(async_client, test_title_4, blog_category_id_1, test_filename_ok, test_updated_date_ok)
-    await create_blog(async_client, test_title_5, blog_category_id_1, test_filename_ok, test_updated_date_ok)
-
-    # ページにつき2件、1ページ目
-    url = f"{base_url}?page=1&limit=2"
-    response = await get_blogs(async_client, url)
-    assert response.status_code == starlette.status.HTTP_200_OK
-    response_obj = response.json()
-    assert len(response_obj) == 2
-    assert response_obj[0]["title"] == "test_title_1"
-    assert response_obj[1]["title"] == "test_title_2"
-
-    # ページにつき3件、2ページ目
-    url = f"{base_url}?page=2&limit=3"
-    response = await get_blogs(async_client, url)
-    assert response.status_code == starlette.status.HTTP_200_OK
-    response_obj = response.json()
-    assert len(response_obj) == 2
-    assert response_obj[0]["title"] == "test_title_4"
-    assert response_obj[1]["title"] == "test_title_5"
+    assert response_obj["count"] == expect_count

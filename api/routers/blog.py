@@ -9,12 +9,12 @@ from api.db import get_db
 router = APIRouter()
 
 # 一覧取得
-@router.get("/blogs", response_model = list[schema.Blog])
-async def list_blogs(db: AsyncSession = Depends(get_db), page: int = Query(default = 1, gt = 0), limit:int = Query(default = 50, gt = 0, le = 50)):
+@router.get("/blogs", response_model = list[schema.BlogResponse])
+async def list_blogs(db: AsyncSession = Depends(get_db), page: int = Query(default = 1, gt = 0), limit: int = Query(default = 50, gt = 0, le = 50)):
     return await crud.get_blogs(db, page = page, limit = limit)
 
 # 詳細取得
-@router.get("/blogs/{id}", response_model = schema.Blog)
+@router.get("/blogs/{id}", response_model = schema.BlogResponse)
 async def detail_blog(id: int, db: AsyncSession = Depends(get_db)):
     blog = await crud.get_blog(db, id = id)
 
@@ -24,13 +24,13 @@ async def detail_blog(id: int, db: AsyncSession = Depends(get_db)):
     return blog
 
 # 追加
-@router.post("/blogs", response_model = schema.BlogCreateResponse)
-async def create_blog(body: schema.BlogCreate, db: AsyncSession = Depends(get_db)):
+@router.post("/blogs", response_model = schema.BlogResponse)
+async def create_blog(body: schema.BlogRequest, db: AsyncSession = Depends(get_db)):
     return await crud.create_blog(db, body)
 
 # 更新
-@router.put("/blogs/{id}", response_model = schema.BlogCreateResponse)
-async def update_blog(id: int, body: schema.BlogCreate, db: AsyncSession = Depends(get_db)):
+@router.put("/blogs/{id}", response_model = schema.BlogResponse)
+async def update_blog(id: int, body: schema.BlogRequest, db: AsyncSession = Depends(get_db)):
     blog = await crud.get_blog(db, id = id)
 
     if blog is None:

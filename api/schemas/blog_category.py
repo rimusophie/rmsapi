@@ -1,21 +1,12 @@
 from pydantic import BaseModel, Field, ConfigDict
 
-# 共通
-class BlogCategoryBase(BaseModel):
-    name: str = Field("", max_length = 100)
-
-# 更新時
-class BlogCategoryCreate(BlogCategoryBase):
-    pass
-
-# 更新時のレスポンス
-class BlogCategoryCreateResponse(BlogCategoryCreate):
+# レスポンス
+class BlogCategoryResponse(BaseModel):
     id: int
+    name: str | None
 
     model_config = ConfigDict(from_attributes = True)
 
-# 取得
-class BlogCategory(BlogCategoryBase):
-    id: int
-
-    model_config = ConfigDict(from_attributes = True)
+# リクエスト
+class BlogCategoryRequest(BaseModel):
+    name: str | None = Field(default = None, max_length = 100)
