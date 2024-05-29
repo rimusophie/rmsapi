@@ -7,7 +7,7 @@ import api.models.blog_category as model
 import api.schemas.blog_category as schema
 
 # 登録
-async def create_blog_category(db: AsyncSession, data: schema.BlogCategoryCreate) -> model.BlogCategory:
+async def create_blog_category(db: AsyncSession, data: schema.BlogCategoryRequest) -> model.BlogCategory:
     ret = model.BlogCategory(name = data.name)
     db.add(ret)
     await db.commit()
@@ -46,7 +46,7 @@ async def get_blog_category(db: AsyncSession, id: int) -> model.BlogCategory | N
     return ret.scalars().first()
 
 # 更新
-async def update_blog_category(db: AsyncSession, new_data: schema.BlogCategory, data: model.BlogCategory) -> model.BlogCategory:
+async def update_blog_category(db: AsyncSession, new_data: schema.BlogCategoryRequest, data: model.BlogCategory) -> model.BlogCategory:
     data.name = new_data.name
     db.add(data)
     await db.commit()

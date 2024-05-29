@@ -10,9 +10,13 @@ async def test_table(async_client_engine):
     response = await async_client_engine.get(base_url)
     assert response.status_code == starlette.status.HTTP_200_OK
     response_obj = response.json()
-    assert len(response_obj) == 2
+    assert len(response_obj) == 5
     assert response_obj[0]["name"] == "blog_categories"
     assert response_obj[1]["name"] == "blogs"
+    assert response_obj[2]["name"] == "portfolio_skills"
+    assert response_obj[3]["name"] == "portfolios"
+    assert response_obj[4]["name"] == "skills"
+
 
 # CRUDテスト
 @pytest.mark.asyncio

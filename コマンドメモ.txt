@@ -6,3 +6,6 @@ docker compose run --entrypoint "poetry run pytest" app
 
 テスト実行(特定の関数のみ)
 docker compose run --entrypoint "poetry run pytest -k xxxx" app
+
+テスト実行(特定のファイルのみ)
+docker compose run --entrypoint "poetry run pytest xxxx/xxxx.py" app

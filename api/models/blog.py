@@ -16,10 +16,10 @@ class Blog(Base):
     blog_category_id = Column(Integer, ForeignKey("blog_categories.id", ondelete="SET NULL", onupdate="CASCADE"))
 
     # ファイル名(拡張子を含む)
-    filename = Column(String(250))
+    filename = Column(String(250), comment="拡張子を含む")
 
     # 更新日(表示上の)
-    updated_date = Column(Date)
+    updated_date = Column(Date, comment="表示上の更新日")
 
     # 更新日時(システム管理)
-    updated_at = Column(Timestamp, server_default = text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"))
+    updated_at = Column(Timestamp, server_default = text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"), comment="システム管理")

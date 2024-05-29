@@ -9,7 +9,7 @@ import api.models.blog_category as model_blog_category
 import api.schemas.blog as schema
 
 # 登録
-async def create_blog(db: AsyncSession, data: schema.BlogCreate) -> model.Blog:
+async def create_blog(db: AsyncSession, data: schema.BlogRequest) -> model.Blog:
     ret = model.Blog(
         title = data.title, 
         blog_category_id = data.blog_category_id, 
@@ -49,7 +49,7 @@ async def get_blog(db: AsyncSession, id: int) -> model.Blog | None:
     return ret.scalars().first()
 
 # 更新
-async def update_blog(db: AsyncSession, new_data: schema.Blog, data: model.Blog) -> model.Blog:
+async def update_blog(db: AsyncSession, new_data: schema.BlogRequest, data: model.Blog) -> model.Blog:
     data.title = new_data.title
     data.blog_category_id = new_data.blog_category_id
     data.filename = new_data.filename
